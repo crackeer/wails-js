@@ -1,0 +1,32 @@
+body {
+  padding: 10px 7.5% 50px;
+  font-family: "Georgia,serif";
+}
+
+
+textarea {
+  min-width: 100%;
+  max-width: 100%;
+}
+
+.bytemd-status-right input[type="checkbox"] {
+  margin: 0 4px 0 0 !important;
+}
+
+.red {
+  color: red;
+}
+
+.bytemd {
+  height: calc(100vh - 200px) !important;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background: #f8f8f8;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "wails-js",
+  "outputfilename": "wails-js",
+  "frontend:install": "",
+  "frontend:build": "",
+  "author": {
+    "name": "liuhu016",
+    "email": "liuhu016@realsee.com"
+  }
+}
