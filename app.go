@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"wails-js/event"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -26,12 +27,7 @@ func (a *App) startup(ctx context.Context) {
 // domReady is called after front-end resources have been loaded
 func (a App) domReady(ctx context.Context) {
 	// Add your action here
-	runtime.EventsOn(ctx, "hello", func(optionalData ...interface{}) {
-		fmt.Println("hello")
-		//runtime.OpenDirectoryDialog(ctx, runtime.OpenDialogOptions{
-		//DefaultDirectory: "/tmp",
-		//})
-	})
+	runtime.EventsOn(ctx, "open-json-file", event.JSONFileSelect(ctx, "open-json-file-callback"))
 	/*
 		result, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 			Type:          runtime.QuestionDialog,
@@ -57,5 +53,6 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
+	fmt.Println(fmt.Sprintf("Hello %s, It's show time!", name))
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
