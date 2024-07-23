@@ -52,6 +52,7 @@
         </div>
     </div>
 </template>
+<script src="wailsjs/go/main/App.js"></script>
 <script defer>
     var jsonEditor = null;
     function getInitJSON() {
@@ -74,6 +75,9 @@
         template: '#template',
         async mounted() {
             this.initGetJSON()
+            console.log('mounted')
+            window.Greet('wails')
+            runtime.EventsEmit('hello', 'wails')
         },
         methods: {
             async initGetJSON() {

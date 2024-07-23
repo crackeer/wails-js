@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -24,6 +26,21 @@ func (a *App) startup(ctx context.Context) {
 // domReady is called after front-end resources have been loaded
 func (a App) domReady(ctx context.Context) {
 	// Add your action here
+	runtime.EventsOn(ctx, "hello", func(optionalData ...interface{}) {
+		fmt.Println("hello")
+		//runtime.OpenDirectoryDialog(ctx, runtime.OpenDialogOptions{
+		//DefaultDirectory: "/tmp",
+		//})
+	})
+	/*
+		result, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+			Type:          runtime.QuestionDialog,
+			Title:         "Question",
+			Message:       "Do you want to continue?",
+			DefaultButton: "No",
+		})
+		fmt.Println(result, err)
+	*/
 }
 
 // beforeClose is called when the application is about to quit,
