@@ -25,8 +25,6 @@ var assets embed.FS
 //go:embed build/appicon.png
 var icon []byte
 
-const pageExt = ".tmpl"
-
 func main() {
 	/*
 		list, err1 := assets.ReadDir("frontend")
@@ -54,6 +52,7 @@ func main() {
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		//Assets:            assets,
 		AssetServer: &assetserver.Options{
+			Assets:  assets,
 			Handler: NewGinEngine(),
 		},
 		Menu:     nil,
@@ -112,7 +111,7 @@ func NewGinEngine() *gin.Engine {
 }
 
 func createStaticHandler(layout string) gin.HandlerFunc {
-	pages := getPageNames("frontend", pageExt)
+	pages := getPageNames("frontend", ".tmpl")
 	object := rollRender.New(rollRender.Options{
 		Directory:  "frontend",
 		Layout:     layout,            // Specify a layout template. Layouts can call {{ yield }} to render the current template or {{ partial "css" }} to render a partial from the current template.
@@ -135,7 +134,6 @@ func createStaticHandler(layout string) gin.HandlerFunc {
 		file := strings.TrimLeft(ctx.Request.URL.Path, "/")
 		fmt.Println(ctx.Request.URL.Path)
 		file = strings.TrimRight(file, "/")
-		file = strings.TrimLeft(file, ".html")
 		if len(file) < 1 {
 			file = "index"
 		}
