@@ -4,9 +4,9 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -26,15 +26,6 @@ var assets embed.FS
 var icon []byte
 
 func main() {
-	/*
-		list, err1 := assets.ReadDir("frontend")
-		if err1 != nil {
-			panic(err1)
-		}
-		for _, item := range list {
-			fmt.Println(item.Name())
-		}*/
-	// Create an instance of the app structure
 	app := NewApp()
 
 	// Create application with options
@@ -111,22 +102,16 @@ func NewGinEngine() *gin.Engine {
 }
 
 func createStaticHandler(layout string) gin.HandlerFunc {
-	pages := getPageNames("frontend", ".tmpl")
 	object := rollRender.New(rollRender.Options{
 		Directory:  "frontend",
+		FileSystem: &rollRender.LocalFileSystem{},
 		Layout:     layout,            // Specify a layout template. Layouts can call {{ yield }} to render the current template or {{ partial "css" }} to render a partial from the current template.
 		Extensions: []string{".tmpl"}, // Specify extensions to load for templates.
 		Delims: rollRender.Delims{
 			Left:  "{[{",
 			Right: "}]}",
 		},
-		IsDevelopment: true,
-		Asset: func(name string) ([]byte, error) {
-			return assets.ReadFile(name)
-		},
-		AssetNames: func() []string {
-			return pages
-		},
+		IsDevelopment:               true,
 		RenderPartialsWithoutPrefix: true,
 	})
 
@@ -156,26 +141,21 @@ func getPageNames(path string, ext string) []string {
 	}
 	for _, item := range list {
 		if item.IsDir() {
-			tmpList := getPageNames(filepath.Join(path, item.Name()), ext)
+			tmpList := getPageNames(path+"/"+item.Name(), ext)
 			retData = append(retData, tmpList...)
 		} else if strings.HasSuffix(item.Name(), ext) {
-			retData = append(retData, filepath.Join(path, item.Name()))
+			retData = append(retData, path+"/"+item.Name())
 		}
 	}
 	return retData
 }
 
-/*
 type MockFileSystem struct {
 	Asset embed.FS
 }
 
 func (fs *MockFileSystem) Open(name string) (fs.File, error) {
-	info, err := fs.Asset.Open(name)
-	if err != nil {
-		return nil, os.ErrNotExist
-	}
-	return info, nil
+	return fs.Asset.Open(name)
 }
 
 func NewMockFileSystem() *MockFileSystem {
@@ -183,4 +163,3 @@ func NewMockFileSystem() *MockFileSystem {
 		Asset: assets,
 	}
 }
-*/

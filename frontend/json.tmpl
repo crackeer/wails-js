@@ -1,0 +1,146 @@
+<template id="template">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="jsoneditor" style="width: 100%; height: calc(100vh - 80px);"></div>
+            <div role="group" aria-label="..." id="btn-group-div">
+                <button type="button" @click="loadJSON" class="btn btn-primary">加载JSON文件</button>
+                <button type="button" @click="saveJSON" class="btn btn-primary">保存到文件</button>
+                <button type="button" @click="json2Go" class="btn btn-primary">转GoStruct</button>
+                <button type="button" @click="json2String" class="btn btn-primary">转字符串</button>
+                <button type="button" @click="revertJSON2String" class="btn btn-primary">反转字符串</button>
+                <button type="button" @click="copyToClipboard" class="btn btn-primary">复制到剪贴板</button>
+                <button type="button" @click="clearJSON" class="btn btn-primary">清空</button>
+                <button type="button" @click="goTest" class="btn btn-primary">test</button>
+            </div>
+        </div>
+    </div>
+</template>
+<script defer>
+    var jsonEditor = null;
+    function getInitJSON() {
+        try {
+            let value = localStorage.getItem("json-editor") || '{}'
+            return JSON.parse(value)
+        } catch (e) {
+            return {}
+        }
+    }
+    function setJSON(value) {
+        localStorage.setItem("json-editor", JSON.stringify(value))
+    }
+    window.VueObject = {
+        data() {
+            return {
+                content: '',
+            }
+        },
+        template: '#template',
+        async mounted() {
+            this.initGetJSON()
+            window['go']['main']['App']['Greet']("simple111").then(result => {
+                console.log(result)
+            })
+            runtime.EventsOn('open-json-file-callback', (data) => {
+                if (data.code != 0) {
+                    bootbox.alert(data.message)
+                    return
+                }
+                try {
+                    let jsonData = JSON.parse(data.data)
+                    jsonEditor.set(jsonData)
+                } catch (e) {
+                    bootbox.alert("JSON格式错误！")
+                }
+            })
+        },
+        methods: {
+            async initGetJSON() {
+                const container = document.getElementById("jsoneditor")
+                const options = {
+                    "mode": "code",
+                    "search": true,
+                    "indentation": 4,
+                    "onValidate": (json) => {
+                        console.log('onValidate', json)
+                        setJSON(json)
+                    }
+                }
+                jsonEditor = new JSONEditor(container, options, getInitJSON())
+            },
+            async saveJSON() {
+                bootbox.prompt("请输入文件名", (fname) => {
+                    if (fname == null || fname == '') {
+                        return true
+                    }
+                    if (fname.indexOf(".") === -1) {
+                        fname = fname + ".json"
+                    } else {
+                        if (fname.split('.').pop().toLowerCase() === "json") {
+                            // Nothing to do
+                        } else {
+                            fname = fname.split('.')[0] + ".json"
+                        }
+                    }
+                    saveFile(JSON.stringify(jsonEditor.get()), fname)
+                })
+            },
+            async json2Go() {
+                let result = jsonToGo(JSON.stringify(jsonEditor.get()), null, null, false)
+                let dialog = bootbox.dialog({
+                    title: '转换结果',
+                    message: '<textarea class="form-control" rows=20>' + result.go + '</textarea>',
+                    closeButton: true,
+                    size: 'large',
+                    onEscape: true,
+                });
+            },
+            async json2String() {
+                jsonEditor.set(JSON.stringify(jsonEditor.get()))
+            },
+            async clearJSON() {
+                jsonEditor.set({})
+            },
+            async revertJSON2String() {
+                try {
+                    jsonEditor.set(JSON.parse(jsonEditor.get()))
+                } catch (e) {
+                    bootbox.alert("JSON格式错误！")
+                }
+            },
+            async loadJSON() {
+                runtime.EventsEmit('open-json-file')
+            },
+            async copyToClipboard() {
+                let text = JSON.stringify(jsonEditor.get())
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        bootbox.alert("复制成功！")
+                    })
+                    .catch(err => {
+                        // This can happen if the user denies clipboard permissions:
+                        console.error('Could not copy text: ', err);
+                    });
+            },
+            goTest() {
+                window.location.href = "/test"
+            }
+
+        }
+    }
+
+</script>
+<style type="text/css">
+body {
+     padding: 10px 15px;
+}
+    #btn-group-div .btn {
+        margin-right: 10px !important;
+    }
+
+    #btn-group-div {
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>
+
+</html>
