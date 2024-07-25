@@ -20,6 +20,7 @@
     <script src="/wails/runtime.js"></script>
     <link type="text/css" rel="stylesheet" href="/assets/bootstrap/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="/assets/jsoneditor/jsoneditor.css">
+    <link type="text/css" rel="stylesheet" href="/global.css">
     <script type="text/javascript">
         window.VueObject = null
         window.VueMount = "#app"
@@ -46,20 +47,4 @@
     <div id="app"></div>
     {[{ yield }]}   
 </body>
-
-<style>
-    /* Custom styles for the fixed sidebar */
-    .navbar-fixed-side {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 80px;
-        background-color: #f8f8f8;
-        padding: 20px;
-    }
-    #app {
-        margin-left: 80px;
-    }
-</style>
 </html>

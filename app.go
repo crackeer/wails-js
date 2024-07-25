@@ -21,22 +21,15 @@ func NewApp() *App {
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
+	fmt.Println("Startup!")
 	a.ctx = ctx
+	runtime.EventsOn(ctx, "open-json-file", event.JSONFileSelect(ctx, "open-json-file-callback"))
 }
 
 // domReady is called after front-end resources have been loaded
 func (a App) domReady(ctx context.Context) {
-	// Add your action here
-	runtime.EventsOn(ctx, "open-json-file", event.JSONFileSelect(ctx, "open-json-file-callback"))
-	/*
-		result, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
-			Type:          runtime.QuestionDialog,
-			Title:         "Question",
-			Message:       "Do you want to continue?",
-			DefaultButton: "No",
-		})
-		fmt.Println(result, err)
-	*/
+	fmt.Println("Dom ready!")
+
 }
 
 // beforeClose is called when the application is about to quit,

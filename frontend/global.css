@@ -9,17 +9,6 @@ textarea {
   max-width: 100%;
 }
 
-.bytemd-status-right input[type="checkbox"] {
-  margin: 0 4px 0 0 !important;
-}
-
-.red {
-  color: red;
-}
-
-.bytemd {
-  height: calc(100vh - 200px) !important;
-}
 
 a {
   text-decoration: none !important;
@@ -29,4 +18,17 @@ thead {
   position: sticky;
   top: 0;
   background: #f8f8f8;
+}
+
+.navbar-fixed-side {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 80px;
+  background-color: #f8f8f8;
+  padding: 20px;
+}
+#app {
+  margin-left: 80px;
 }
