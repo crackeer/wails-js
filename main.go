@@ -2,11 +2,11 @@ package main
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,14 +19,18 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
-//go:embed frontend
-var assets embed.FS
+//go:embed frontend/public
+var staticAssets embed.FS
+
+//go:embed frontend/pages
+var pageAssets embed.FS
 
 //go:embed build/appicon.png
 var icon []byte
 
 func main() {
 	app := NewApp()
+	localPath := os.Getenv("PAGE_ASSET_DIR")
 
 	// Create application with options
 	err := wails.Run(&options.App{
@@ -43,8 +47,8 @@ func main() {
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		//Assets:            assets,
 		AssetServer: &assetserver.Options{
-			Assets:  assets,
-			Handler: NewGinEngine(),
+			Assets:  NewMockFileSystem(staticAssets),
+			Handler: NewGinEngine(pageAssets, localPath),
 		},
 		Menu:     nil,
 		Logger:   nil,
@@ -63,8 +67,7 @@ func main() {
 			WebviewIsTransparent: false,
 			WindowIsTranslucent:  false,
 			DisableWindowIcon:    false,
-			// DisableFramelessWindowDecorations: false,
-			WebviewUserDataPath: "",
+			WebviewUserDataPath:  "",
 		},
 		// Mac platform specific options
 		Mac: &mac.Options{
@@ -95,17 +98,13 @@ func main() {
 // NewGinEngine
 //
 //	@return *gin.Engine
-func NewGinEngine() *gin.Engine {
+func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 	router := gin.Default()
-	router.NoRoute(createStaticHandler("layout"))
-	return router
-}
 
-func createStaticHandler(layout string) gin.HandlerFunc {
-	object := rollRender.New(rollRender.Options{
-		Directory:  "frontend",
-		FileSystem: &rollRender.LocalFileSystem{},
-		Layout:     layout,            // Specify a layout template. Layouts can call {{ yield }} to render the current template or {{ partial "css" }} to render a partial from the current template.
+	option := rollRender.Options{
+		Directory:  localPath,
+		FileSystem: rollRender.LocalFileSystem{},
+		Layout:     "layout",
 		Extensions: []string{".tmpl"}, // Specify extensions to load for templates.
 		Delims: rollRender.Delims{
 			Left:  "{[{",
@@ -113,9 +112,17 @@ func createStaticHandler(layout string) gin.HandlerFunc {
 		},
 		IsDevelopment:               true,
 		RenderPartialsWithoutPrefix: true,
-	})
+	}
+	if len(localPath) > 0 {
+		option.Directory = localPath
+		option.FileSystem = &rollRender.LocalFileSystem{}
+	} else {
+		option.Directory = "frontend/pages"
+		option.FileSystem = &rollRender.EmbedFileSystem{embedFs}
+	}
+	rollRenderer := rollRender.New(option)
 
-	return func(ctx *gin.Context) {
+	router.NoRoute(func(ctx *gin.Context) {
 		file := strings.TrimLeft(ctx.Request.URL.Path, "/")
 		fmt.Println(ctx.Request.URL.Path)
 		file = strings.TrimRight(file, "/")
@@ -123,31 +130,9 @@ func createStaticHandler(layout string) gin.HandlerFunc {
 			file = "index"
 		}
 
-		var data interface{}
-		jsonFile := file + ".json"
-		if bytes, err := assets.ReadFile(jsonFile); err == nil {
-			json.Unmarshal(bytes, &data)
-		}
-
-		object.HTML(ctx.Writer, http.StatusOK, file, data)
-	}
-}
-
-func getPageNames(path string, ext string) []string {
-	retData := []string{}
-	list, err := assets.ReadDir(path)
-	if err != nil {
-		return retData
-	}
-	for _, item := range list {
-		if item.IsDir() {
-			tmpList := getPageNames(path+"/"+item.Name(), ext)
-			retData = append(retData, tmpList...)
-		} else if strings.HasSuffix(item.Name(), ext) {
-			retData = append(retData, path+"/"+item.Name())
-		}
-	}
-	return retData
+		rollRenderer.HTML(ctx.Writer, http.StatusOK, file, nil)
+	})
+	return router
 }
 
 type MockFileSystem struct {
@@ -158,8 +143,13 @@ func (fs *MockFileSystem) Open(name string) (fs.File, error) {
 	return fs.Asset.Open(name)
 }
 
-func NewMockFileSystem() *MockFileSystem {
+// NewMockFileSystem
+//
+//	@param embedFs
+//	@param localPath
+//	@return *MockFileSystem
+func NewMockFileSystem(embedFs embed.FS) *MockFileSystem {
 	return &MockFileSystem{
-		Asset: assets,
+		Asset: embedFs,
 	}
 }
