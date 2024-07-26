@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +31,8 @@ var icon []byte
 
 func main() {
 	app := NewApp()
-	localPath := os.Getenv("PAGE_ASSET_DIR")
+	pageLocalPath := os.Getenv("PAGE_ASSETS_DIR")
+	staticLocalPath := os.Getenv("STATIC_ASSETS_DIR")
 
 	// Create application with options
 	err := wails.Run(&options.App{
@@ -47,8 +49,8 @@ func main() {
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		//Assets:            assets,
 		AssetServer: &assetserver.Options{
-			Assets:  NewMockFileSystem(staticAssets),
-			Handler: NewGinEngine(pageAssets, localPath),
+			Assets:  NewMockFileSystem(staticAssets, staticLocalPath),
+			Handler: NewGinEngine(pageAssets, pageLocalPath),
 		},
 		Menu:     nil,
 		Logger:   nil,
@@ -136,10 +138,14 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 }
 
 type MockFileSystem struct {
-	Asset embed.FS
+	Asset     embed.FS
+	LocalPath string
 }
 
 func (fs *MockFileSystem) Open(name string) (fs.File, error) {
+	if len(fs.LocalPath) > 0 {
+		return os.Open(filepath.Join(fs.LocalPath, name))
+	}
 	return fs.Asset.Open(name)
 }
 
@@ -148,8 +154,9 @@ func (fs *MockFileSystem) Open(name string) (fs.File, error) {
 //	@param embedFs
 //	@param localPath
 //	@return *MockFileSystem
-func NewMockFileSystem(embedFs embed.FS) *MockFileSystem {
+func NewMockFileSystem(embedFs embed.FS, localPath string) *MockFileSystem {
 	return &MockFileSystem{
-		Asset: embedFs,
+		Asset:     embedFs,
+		LocalPath: localPath,
 	}
 }

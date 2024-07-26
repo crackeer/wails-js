@@ -25,10 +25,8 @@ thead {
   top: 0;
   left: 0;
   height: 100%;
-  width: 80px;
-  background-color: #f8f8f8;
-  padding: 20px;
+  width: 60px;
 }
 #app {
-  margin-left: 80px;
+  margin-left: 60px;
 }
