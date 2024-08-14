@@ -131,7 +131,6 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		if len(file) < 1 {
 			file = "index"
 		}
-
 		rollRenderer.HTML(ctx.Writer, http.StatusOK, file, nil)
 	})
 	return router
