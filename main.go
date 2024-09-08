@@ -136,18 +136,23 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		option.FileSystem = &rollRender.EmbedFileSystem{embedFs}
 	}
 	rollRenderer := rollRender.New(option)
-	myFileSystem := NewMyFileSystem(embedFs, localPath)
-	fileServer := http.StripPrefix("frontend", http.FileServer(http.FS(embedFs)))
+
+	// embedFs去掉前缀
+	subFs, _ := fs.Sub(embedFs, "frontend")
+	myFileSystem := NewMyFileSystem(subFs, localPath)
+	fileServer := http.StripPrefix("", http.FileServer(http.FS(subFs)))
 	if len(localPath) > 0 {
 		fileServer = http.StripPrefix("", http.FileServer(http.Dir(localPath)))
 	}
 	router.NoRoute(func(ctx *gin.Context) {
 		file := strings.TrimLeft(ctx.Request.URL.Path, "/")
 		if len(file) > 0 {
-			if _, err := myFileSystem.Open(ctx.Request.URL.Path); err == nil {
+			if _, err := myFileSystem.Open(file); err == nil {
 				ctx.Writer.Header().Set("Content-Type", myFileSystem.ContentType(ctx.Request.URL.Path))
 				fileServer.ServeHTTP(ctx.Writer, ctx.Request)
 				return
+			} else {
+				fmt.Println(err.Error())
 			}
 		}
 
@@ -162,7 +167,7 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 
 // MyFileSystem
 type MyFileSystem struct {
-	Asset     embed.FS
+	Asset     fs.FS
 	LocalPath string
 }
 
@@ -197,9 +202,9 @@ func (fs *MyFileSystem) ContentType(name string) string {
 //	@param embedFs
 //	@param localPath
 //	@return *MyFileSystem
-func NewMyFileSystem(embedFs embed.FS, localPath string) *MyFileSystem {
+func NewMyFileSystem(tmpFs fs.FS, localPath string) *MyFileSystem {
 	return &MyFileSystem{
-		Asset:     embedFs,
+		Asset:     tmpFs,
 		LocalPath: localPath,
 	}
 }
