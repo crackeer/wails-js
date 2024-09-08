@@ -1,18 +1,14 @@
 <template id="template">
-    <div class="row">
-        <div class="col-md-12">
-            <div id="jsoneditor" style="width: 100%; height: calc(100vh - 80px);"></div>
-            <div role="group" aria-label="..." id="btn-group-div">
-                <button type="button" @click="loadJSON" class="btn btn-primary">加载JSON文件</button>
-                <button type="button" @click="saveJSON" class="btn btn-primary">保存到文件</button>
-                <button type="button" @click="json2Go" class="btn btn-primary">转GoStruct</button>
-                <button type="button" @click="json2String" class="btn btn-primary">转字符串</button>
-                <button type="button" @click="revertJSON2String" class="btn btn-primary">反转字符串</button>
-                <button type="button" @click="copyToClipboard" class="btn btn-primary">复制到剪贴板</button>
-                <button type="button" @click="clearJSON" class="btn btn-primary">清空</button>
-                <button type="button" @click="goTest" class="btn btn-primary">test</button>
-            </div>
-        </div>
+    <div id="jsoneditor" style="width: 100%; height: calc(100vh - 80px);"></div>
+    <div role="group" aria-label="..." id="btn-group-div">
+        <button type="button" @click="loadJSON" class="btn btn-primary">加载JSON文件</button>
+        <button type="button" @click="saveJSON" class="btn btn-primary">保存到文件</button>
+        <button type="button" @click="json2Go" class="btn btn-primary">转GoStruct</button>
+        <button type="button" @click="json2String" class="btn btn-primary">转字符串</button>
+        <button type="button" @click="revertJSON2String" class="btn btn-primary">反转字符串</button>
+        <button type="button" @click="copyToClipboard" class="btn btn-primary">复制到剪贴板</button>
+        <button type="button" @click="clearJSON" class="btn btn-primary">清空</button>
+        <button type="button" @click="goTest" class="btn btn-primary">test</button>
     </div>
 </template>
 <script defer>
@@ -37,9 +33,7 @@
         template: '#template',
         async mounted() {
             this.initGetJSON()
-            window['go']['main']['App']['Greet']("simple111").then(result => {
-                console.log(result)
-            })
+            console.log(window['go'])
             runtime.EventsOn('open-json-file-callback', (data) => {
                 if (data.code != 0) {
                     bootbox.alert(data.message)

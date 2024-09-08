@@ -3,7 +3,7 @@
   "outputfilename": "wails-js",
   "frontend:install": "",
   "frontend:build": "",
-  "reloaddirs" : "frontend/pages",
+  "reloaddirs" : "frontend",
   "author": {
     "name": "liuhu016",
     "email": "liuhu016@realsee.com"

@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
+	"wails-js/bind"
+	"wails-js/event"
 
 	"github.com/gin-gonic/gin"
 	rollRender "github.com/unrolled/render"
@@ -18,25 +22,22 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-//go:embed frontend/public
+//go:embed frontend
 var staticAssets embed.FS
-
-//go:embed frontend/pages
-var pageAssets embed.FS
 
 //go:embed build/appicon.png
 var icon []byte
 
 func main() {
-	app := NewApp()
-	pageLocalPath := os.Getenv("PAGE_ASSETS_DIR")
-	staticLocalPath := os.Getenv("STATIC_ASSETS_DIR")
+	example := bind.NewExample()
+	assetsDir := os.Getenv("ASSETS_DIR")
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:             "wails-js",
+		Title:             "开发者工具箱",
 		Width:             1024,
 		Height:            768,
 		MinWidth:          1024,
@@ -49,20 +50,26 @@ func main() {
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		//Assets:            assets,
 		AssetServer: &assetserver.Options{
-			Assets:  NewMockFileSystem(staticAssets, staticLocalPath),
-			Handler: NewGinEngine(pageAssets, pageLocalPath),
+			Handler: NewGinEngine(staticAssets, assetsDir),
 		},
 		Menu:     nil,
 		Logger:   nil,
 		LogLevel: logger.DEBUG,
 
-		OnStartup:        app.startup,
-		OnDomReady:       app.domReady,
-		OnBeforeClose:    app.beforeClose,
-		OnShutdown:       app.shutdown,
+		OnStartup: OnStartup,
+		OnDomReady: func(ctx context.Context) {
+			fmt.Println("Dom ready!")
+		},
+		OnBeforeClose: func(ctx context.Context) (prevent bool) {
+			fmt.Println("OnBeforeClose")
+			return false
+		},
+		OnShutdown: func(ctx context.Context) {
+			fmt.Println("OnShutdown")
+		},
 		WindowStartState: options.Normal,
 		Bind: []interface{}{
-			app,
+			example,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{
@@ -97,17 +104,23 @@ func main() {
 	}
 }
 
+// OnStartup
+//
+//	@param ctx
+func OnStartup(ctx context.Context) {
+	runtime.EventsOn(ctx, "open-json-file", event.JSONFileSelect(ctx, "open-json-file-callback"))
+}
+
 // NewGinEngine
 //
 //	@return *gin.Engine
 func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 	router := gin.Default()
-
 	option := rollRender.Options{
 		Directory:  localPath,
 		FileSystem: rollRender.LocalFileSystem{},
 		Layout:     "layout",
-		Extensions: []string{".tmpl"}, // Specify extensions to load for templates.
+		Extensions: []string{".tmpl", ".html"}, // Specify extensions to load for templates.
 		Delims: rollRender.Delims{
 			Left:  "{[{",
 			Right: "}]}",
@@ -119,14 +132,25 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		option.Directory = localPath
 		option.FileSystem = &rollRender.LocalFileSystem{}
 	} else {
-		option.Directory = "frontend/pages"
+		option.Directory = "frontend"
 		option.FileSystem = &rollRender.EmbedFileSystem{embedFs}
 	}
 	rollRenderer := rollRender.New(option)
-
+	myFileSystem := NewMyFileSystem(embedFs, localPath)
+	fileServer := http.StripPrefix("frontend", http.FileServer(http.FS(embedFs)))
+	if len(localPath) > 0 {
+		fileServer = http.StripPrefix("", http.FileServer(http.Dir(localPath)))
+	}
 	router.NoRoute(func(ctx *gin.Context) {
 		file := strings.TrimLeft(ctx.Request.URL.Path, "/")
-		fmt.Println(ctx.Request.URL.Path)
+		if len(file) > 0 {
+			if _, err := myFileSystem.Open(ctx.Request.URL.Path); err == nil {
+				ctx.Writer.Header().Set("Content-Type", myFileSystem.ContentType(ctx.Request.URL.Path))
+				fileServer.ServeHTTP(ctx.Writer, ctx.Request)
+				return
+			}
+		}
+
 		file = strings.TrimRight(file, "/")
 		if len(file) < 1 {
 			file = "index"
@@ -136,25 +160,45 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 	return router
 }
 
-type MockFileSystem struct {
+// MyFileSystem
+type MyFileSystem struct {
 	Asset     embed.FS
 	LocalPath string
 }
 
-func (fs *MockFileSystem) Open(name string) (fs.File, error) {
+func (fs *MyFileSystem) Open(name string) (fs.File, error) {
 	if len(fs.LocalPath) > 0 {
 		return os.Open(filepath.Join(fs.LocalPath, name))
 	}
 	return fs.Asset.Open(name)
 }
 
-// NewMockFileSystem
+var mimeTypeByExtension = map[string]string{
+	".css":  "text/css",
+	".js":   "application/javascript",
+	".html": "text/html",
+	".svg":  "image/svg+xml",
+	".png":  "image/png",
+	".jpg":  "image/jpeg",
+	".ico":  "image/x-icon",
+	".txt":  "text/plain",
+}
+
+func (fs *MyFileSystem) ContentType(name string) string {
+	extension := path.Ext(name)
+	if mimeType, ok := mimeTypeByExtension[extension]; ok {
+		return mimeType
+	}
+	return "application/octet-stream"
+}
+
+// NewMyFileSystem
 //
 //	@param embedFs
 //	@param localPath
-//	@return *MockFileSystem
-func NewMockFileSystem(embedFs embed.FS, localPath string) *MockFileSystem {
-	return &MockFileSystem{
+//	@return *MyFileSystem
+func NewMyFileSystem(embedFs embed.FS, localPath string) *MyFileSystem {
+	return &MyFileSystem{
 		Asset:     embedFs,
 		LocalPath: localPath,
 	}

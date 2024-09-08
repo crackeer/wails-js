@@ -3,7 +3,6 @@ body {
   margin: 0;
 }
 
-
 textarea {
   min-width: 100%;
   max-width: 100%;
@@ -30,5 +29,4 @@ thead {
 }
 #app {
   margin-left: 60px;
-  padding-left: 3px;
 }
