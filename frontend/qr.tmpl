@@ -1,0 +1,38 @@
+<template id="template">
+    <div>
+        <textarea class="form-control" placeholder="输入文本" v-model="value" @input="convert" rows="3"></textarea>
+    </div>
+    <div class="row">
+        <div  id="qrcode" style="padding: 20px 40px;"></div>
+    </div>
+</template>
+<script>
+    window.VueObject = {
+        data() {
+            return {
+                value: '',
+            }
+        },
+        template: '#template',
+        async mounted() {
+            this.value = getQuery('value', 'http://baidu.com')
+            qrcode = new QRCode("qrcode", {
+                text: this.value,
+                width: 328,
+                height: 328,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        },
+        methods: {
+            async convert() {
+                qrcode.clear(); // clear the code.
+                qrcode.makeCode(this.value);
+                pushStateWith({
+                    value: this.value
+                })
+            }
+        }
+    }
+</script>

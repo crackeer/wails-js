@@ -1,11 +1,11 @@
 {
-  "name": "wails-js",
-  "outputfilename": "wails-js",
+  "name": "开发者工具箱",
+  "outputfilename": "wails-developer-toolbox",
   "frontend:install": "",
   "frontend:build": "",
   "reloaddirs" : "frontend",
   "author": {
-    "name": "liuhu016",
-    "email": "liuhu016@realsee.com"
+    "name": "simple",
+    "email": "simple@simple.com"
   }
 }

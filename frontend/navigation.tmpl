@@ -1,16 +1,19 @@
 <div id="navigation">
-    <a href="/">JSON</a>
-    <a href="/">Simple</a>
+    <a href="/" {[{if eq .file "index"}]} class="active" {[{ end }]}>JSON</a>
+    <a href="/qr" {[{if eq .file "qr"}]} class="active" {[{ end }]}>二维码</a>
 </div>
 <style type="text/css">
     #navigation a {
-        color: #3883fa;
         text-decoration: none;
-        font-weight: bold;
-        font-size: medium;
         padding: 15px 1px;
         display: block;
         text-align: center;
         border-bottom:  1px solid #3883fa;
+    }
+
+    #navigation .active {
+        color: #3883fa;
+        font-weight: bold;
+        font-size: medium;
     }
 </style>

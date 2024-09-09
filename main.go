@@ -28,7 +28,9 @@ import (
 //go:embed frontend
 var staticAssets embed.FS
 
-//go:embed build/appicon.png
+var embedFsSubDir string = "frontend"
+
+//go:embed build/T.png
 var icon []byte
 
 func main() {
@@ -48,7 +50,6 @@ func main() {
 		StartHidden:       false,
 		HideWindowOnClose: false,
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
-		//Assets:            assets,
 		AssetServer: &assetserver.Options{
 			Handler: NewGinEngine(staticAssets, assetsDir),
 		},
@@ -92,8 +93,8 @@ func main() {
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
 			About: &mac.AboutInfo{
-				Title:   "wails-js",
-				Message: "",
+				Title:   "开发者工具箱",
+				Message: "开发者工具箱",
 				Icon:    icon,
 			},
 		},
@@ -120,7 +121,7 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		Directory:  localPath,
 		FileSystem: rollRender.LocalFileSystem{},
 		Layout:     "layout",
-		Extensions: []string{".tmpl", ".html"}, // Specify extensions to load for templates.
+		Extensions: []string{".tmpl"}, // Specify extensions to load for templates.
 		Delims: rollRender.Delims{
 			Left:  "{[{",
 			Right: "}]}",
@@ -132,13 +133,13 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		option.Directory = localPath
 		option.FileSystem = &rollRender.LocalFileSystem{}
 	} else {
-		option.Directory = "frontend"
-		option.FileSystem = &rollRender.EmbedFileSystem{embedFs}
+		option.Directory = embedFsSubDir
+		option.FileSystem = &rollRender.EmbedFileSystem{FS: embedFs}
 	}
 	rollRenderer := rollRender.New(option)
 
 	// embedFs去掉前缀
-	subFs, _ := fs.Sub(embedFs, "frontend")
+	subFs, _ := fs.Sub(embedFs, embedFsSubDir)
 	myFileSystem := NewMyFileSystem(subFs, localPath)
 	fileServer := http.StripPrefix("", http.FileServer(http.FS(subFs)))
 	if len(localPath) > 0 {
@@ -151,8 +152,6 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 				ctx.Writer.Header().Set("Content-Type", myFileSystem.ContentType(ctx.Request.URL.Path))
 				fileServer.ServeHTTP(ctx.Writer, ctx.Request)
 				return
-			} else {
-				fmt.Println(err.Error())
 			}
 		}
 
@@ -160,7 +159,10 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		if len(file) < 1 {
 			file = "index"
 		}
-		rollRenderer.HTML(ctx.Writer, http.StatusOK, file, nil)
+		var binding map[string]interface{} = map[string]interface{}{
+			"file": file,
+		}
+		rollRenderer.HTML(ctx.Writer, http.StatusOK, file, binding)
 	})
 	return router
 }
