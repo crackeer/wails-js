@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
+	"path/filepath"
+	"runtime"
 )
 
 // System App struct
@@ -57,4 +60,25 @@ func (a *System) GetInnerIP() []string {
 		}
 	}
 	return ipList
+}
+
+func (a *System) GetDownloadDir() string {
+	// 根据操作系统获取默认下载目录
+	switch runtime.GOOS {
+	case "windows":
+		// 在Windows上通常下载目录在用户的文档文件夹内
+		return filepath.Join(os.Getenv("USERPROFILE"), "Downloads")
+	case "linux":
+		// 在Linux上，下载目录可能在用户的文档文件夹内，或者通过环境变量获取
+		xdgDownloadDir := os.Getenv("XDG_DOWNLOAD_DIR")
+		if xdgDownloadDir != "" {
+			return xdgDownloadDir
+		}
+		return filepath.Join(os.Getenv("HOME"), "Downloads")
+	case "darwin":
+		// 在macOS上，下载目录可能在用户的文档文件夹内，或者通过环境变量获取
+		return filepath.Join(os.Getenv("HOME"), "Downloads")
+	}
+
+	return ""
 }
