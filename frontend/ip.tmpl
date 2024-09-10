@@ -1,0 +1,32 @@
+<template id="template">
+    <div>
+        
+        <div class="col-md-4">
+            <ul class="list-group">
+                <li class="list-group-item active">内网IP列表</li>
+                <li class="list-group-item" v-for="item in ipList">{{item}}</li>
+            </ul>
+        </div>
+    </div>
+</template>
+<script>
+    window.VueObject = {
+        data() {
+            return {
+                ipList : [],
+            }
+        },
+        template: '#template',
+        async mounted() {
+            this.getInnerIP()
+
+        },
+        methods: {
+            async getInnerIP() {
+                let data = await window.go.bind.System.GetInnerIP()
+                this.ipList = data
+            }
+        }
+    }
+
+</script>
