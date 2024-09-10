@@ -1,0 +1,64 @@
+<template id="template">
+    <div class="col-md-12" style="padding: 10px 15px;">
+        <strong>操作：</strong>
+        <label class="radio-inline">
+            <input type="radio" name="action" v-model="action" value="timestamp" @change="convert">时间戳转换
+        </label>
+        <label class="radio-inline">
+            <input type="radio" name="action" v-model="action" value="std_time" @change="convert">时间转时间戳
+        </label>
+        <label class="radio-inline">
+            <input type="radio" name="action" v-model="action" value="base64_decode" @change="convert">base64解密
+        </label>
+        <label class="radio-inline">
+            <input type="radio" name="action" v-model="action" value="base64_encode" @change="convert">base64加密
+        </label>
+    </div>
+    <div class="col-md-6">
+        <strong>输入：</strong>
+        <textarea class="form-control" placeholder="输入时间戳" v-model="value" @input="convert" rows="3"></textarea>
+    </div>
+    <div class="col-md-6">
+        <strong>输出：</strong>
+        <textarea class="form-control" v-model="output" rows="3"></textarea>
+    </div>
+</template>
+<script>
+    window.VueObject = {
+        data() {
+            if (localStorage.getItem('convertData')) {
+                let data = JSON.parse(localStorage.getItem('convertData'))
+               return data
+            }
+            return {
+                action: 'timestamp',
+                value: '',
+                output: '',
+            }
+        },
+        template: '#template',
+        methods: {
+            async convert() {
+                switch (this.action) {
+                    case 'timestamp':
+                        this.output = dayjs.unix(this.value).format('YYYY-MM-DD HH:mm:ss')
+                        break
+                    case 'std_time':
+                        this.output = dayjs(this.value).unix()
+                        break
+                    case 'base64_decode':
+                        this.output = window.atob(this.value)
+                        break
+                    case 'base64_encode':
+                        this.output = window.btoa(this.value)
+                        break
+                }
+                localStorage.setItem('convertData', JSON.stringify({
+                    action: this.action,
+                    value: this.value,
+                    output: this.output
+                }))
+            }
+        }
+    }
+</script>

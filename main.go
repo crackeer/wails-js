@@ -36,6 +36,7 @@ var icon []byte
 func main() {
 	example := bind.NewExample()
 	assetsDir := os.Getenv("ASSETS_DIR")
+	fmt.Println("assetsDir", assetsDir)
 
 	// Create application with options
 	err := wails.Run(&options.App{
