@@ -1,11 +1,13 @@
 <template id="template">
+    <h3>内网IP</h3>
+    <hr />
     <div>
-        
-        <div class="col-md-4">
-            <ul class="list-group">
-                <li class="list-group-item active">内网IP列表</li>
-                <li class="list-group-item" v-for="item in ipList">{{item}}</li>
-            </ul>
+        <div class="col-md-4" v-for="item in ipList">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    {{item}}
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -13,7 +15,7 @@
     window.VueObject = {
         data() {
             return {
-                ipList : [],
+                ipList: [],
             }
         },
         template: '#template',

@@ -131,19 +131,22 @@ func NewGinEngine(embedFs embed.FS, localPath string) *gin.Engine {
 		IsDevelopment:               true,
 		RenderPartialsWithoutPrefix: true,
 	}
-	if len(localPath) > 0 {
-		option.Directory = localPath
-		option.FileSystem = &rollRender.LocalFileSystem{}
-	} else {
-		option.Directory = embedFsSubDir
-		option.FileSystem = &rollRender.EmbedFileSystem{FS: embedFs}
-	}
-	rollRenderer := rollRender.New(option)
-
+	var fileServer http.Handler
 	// embedFs去掉前缀
 	subFs, _ := fs.Sub(embedFs, embedFsSubDir)
 	myFileSystem := NewMyFileSystem(subFs, localPath)
-	fileServer := http.StripPrefix("", http.FileServer(http.FS(subFs)))
+
+	if len(localPath) > 0 {
+		option.Directory = localPath
+		option.FileSystem = &rollRender.LocalFileSystem{}
+		fileServer = http.StripPrefix("", http.FileServer(http.Dir(localPath)))
+	} else {
+		option.Directory = embedFsSubDir
+		option.FileSystem = &rollRender.EmbedFileSystem{FS: embedFs}
+		fileServer = http.StripPrefix("", http.FileServer(http.FS(subFs)))
+	}
+	rollRenderer := rollRender.New(option)
+
 	if len(localPath) > 0 {
 		fileServer = http.StripPrefix("", http.FileServer(http.Dir(localPath)))
 	}

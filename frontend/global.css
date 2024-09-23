@@ -1,6 +1,7 @@
 body {
   padding: 0;
   margin: 0;
+  font-size: 17px;
 }
 
 textarea {
@@ -24,11 +25,11 @@ thead {
   top: 0;
   left: 0;
   height: 100%;
-  width: 60px;
-  border-left: 1px solid gray;
+  width: 120px;
+  border-right: 1px solid rgb(195, 192, 192);
 }
 #app {
-  margin-left: 65px;
+  margin-left: 125px;
   margin-top: 5px;
   margin-right: 5px;
 }
