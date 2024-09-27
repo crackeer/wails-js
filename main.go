@@ -36,6 +36,8 @@ var icon []byte
 func main() {
 	example := bind.NewExample()
 	system := bind.NewSystem()
+
+	file := bind.NewFile()
 	assetsDir := os.Getenv("ASSETS_DIR")
 	fmt.Println("assetsDir", assetsDir)
 
@@ -72,7 +74,7 @@ func main() {
 		},
 		WindowStartState: options.Normal,
 		Bind: []interface{}{
-			example, system,
+			example, system, file,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{
