@@ -1,48 +1,53 @@
 <template id="template">
-   <h3>{{downloadDir}}</h3>
-   <table class="table table-bordered table-condensed">
-    <thead>
-        <tr>
-            <th>名字</th>
-            <th>大小</th>
-            <th>修改时间</th>
-            <th>操作</th>
-        </tr>
-    <tbody>
-        <tr v-for="(item, i) in files">
-            <td v-if="item.is_dir">
-                <span style="color: #3883fa;" v-if="item.is_dir">
-                    {{item.name}}
-                </span>
-            </td>
-            <td v-else>
-                {{item.name}}
-            </td>
-            <td>
-                {{item.size}}
-            </td>
-            <td>
-                {{item.modify_time_string}}
-            </td>
-            <td>
-                <button class="btn btn-link" @click="handleDelete(item)">删除</button>
-            </td>
-        </tr>
-    </tbody>
-</table>
+    <h3>{{downloadDir}}</h3>
+    <div class="row" style="padding: 10px 20px;">
+        <table class="table table-bordered table-condensed">
+            <thead>
+                <tr>
+                    <th>名字</th>
+                    <th>大小</th>
+                    <th>修改时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item, i) in files">
+                    <td>
+                        <template v-if="item.is_dir">
+                            <span style="color: #3883fa;">
+                                {{item.name}}
+                            </span>
+                        </template>
+                        <template v-else>
+                            {{item.name}}
+                        </template>
+                    </td>
+                    <td>
+                        {{item.size}}
+                    </td>
+                    <td>
+                        {{item.modify_time_string}}
+                    </td>
+                    <td>
+                        <button class="btn btn-link" @click="handleDelete(item)">删除</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </template>
 <script>
     window.VueObject = {
         data() {
             return {
-                downloadDir :'',    
+                downloadDir: '',
                 files: []
             }
         },
         template: '#template',
         async mounted() {
-           await this.getDownloadDir()
-           await this.getFiles()
+            await this.getDownloadDir()
+            await this.getFiles()
         },
         methods: {
             async getDownloadDir() {
@@ -67,9 +72,7 @@
                         return
                     }
                     let data = await window.go.bind.File.Delete(item.path)
-                    bootbox.alert('删除成功', () => {
-                        this.getFiles()
-                    })
+                    this.getFiles()
                 })
             }
         }
