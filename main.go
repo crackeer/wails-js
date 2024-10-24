@@ -38,7 +38,10 @@ func main() {
 	system := bind.NewSystem()
 
 	file := bind.NewFile()
-	assetsDir := os.Getenv("ASSETS_DIR")
+	assetsDir := ""
+	if os.Getenv("DEV") == "1" {
+		assetsDir = "./frontend"
+	}
 	fmt.Println("assetsDir", assetsDir)
 
 	// Create application with options
